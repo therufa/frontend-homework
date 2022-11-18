@@ -60,6 +60,7 @@ function fileArrayFromDataTransfer(dataTransfer) {
 
 const InputForm = forwardRef((props, formRef) => {
   const { onChange, onSubmit, files = [], statusMessage, borkedEmails } = props;
+  const [isHovered, setIsHovered] = useState(false);
 
   const handleFileChange = (e) => {
     onChange(Array.from(e.currentTarget.files));
@@ -76,15 +77,35 @@ const InputForm = forwardRef((props, formRef) => {
 
     const files = fileArrayFromDataTransfer(e.dataTransfer);
     onChange(files);
+    setIsHovered(false);
   };
 
   const handleFileDrag = (e) => {
     // prevent default browser behaviour
     e.preventDefault();
+    setIsHovered(true);
   };
 
+  const handleDragEnter = (e) => {
+  };
+
+  const handleDragEnd = (e) => {
+    setIsHovered(false);
+  };
+
+  const classNames = [
+    "email-form",
+    (isHovered && "email-form--hovered")
+  ].filter(Boolean);
+
   return (
-    <form ref={formRef} onSubmit={handleFormSubmit} onDrop={handleFileDrop} onDragOver={handleFileDrag} className="email-form">
+    <form ref={formRef}
+      onSubmit={handleFormSubmit}
+      onDrop={handleFileDrop}
+      onDragOver={handleFileDrag}
+      onDragLeave={handleDragEnd}
+      className={classNames.join(" ")}
+    >
       <div className="email-form__form-body">
         <input
           type="file"

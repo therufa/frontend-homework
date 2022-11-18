@@ -3,7 +3,8 @@ body {
 }
 
 
-.email-form {
+.email-form--hovered {
+  border: 2px solid red;
 }
 .email-form__form-body {
   padding-bottom: 1rem;
