@@ -86,9 +86,6 @@ const InputForm = forwardRef((props, formRef) => {
     setIsHovered(true);
   };
 
-  const handleDragEnter = (e) => {
-  };
-
   const handleDragEnd = (e) => {
     setIsHovered(false);
   };
