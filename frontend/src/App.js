@@ -23,7 +23,12 @@ function InputForm({ onChange }) {
   }
 
   return (
-    <input type="file" onChange={handleFileChange} />
+    <input
+      type="file"
+      accept=".txt,text/plain"
+      multiple
+      onChange={handleFileChange}
+    />
   )
 }
 
@@ -33,18 +38,18 @@ function App() {
 
   const handlePrintContents = async () => {
     const fileContentList = (await Promise.all(files.map(readFileText)))
-    const emailList = fileContentList.reduce((emails, rawList) =>
+    const emailList = new Set(fileContentList.reduce((emails, rawList) =>
       [...emails, rawList.split('\n').filter(Boolean)], []
-    ).flat()
+    ).flat())
     
-    setEmailList(emailList)
+    setEmailList(Array.from(emailList))
   }
 
   return (
     <>
       <InputForm onChange={setFiles} />
       <ul>
-        {files.map(file => <li key={file}>{file.name}</li>)}
+        {files.map(file => <li key={file.name}>{file.name}</li>)}
       </ul>
 
       <button onClick={handlePrintContents}>print content</button>
