@@ -1,3 +1,13 @@
 body {
   font-family: sans-serif;
 }
+
+
+.email-form {
+}
+.email-form__form-body {
+  padding-bottom: 1rem;
+}
+.email-form__status-message {
+
+}

@@ -7,13 +7,16 @@ function parseEmailFile(file) {
     const fileReader = new FileReader();
 
     if (!file || file.type !== "text/plain") {
-      return reject(new TypeError("File is not of type text"));
+      return reject(new TypeError(`File ${file.name} is not of type text`));
     }
 
-    fileReader.addEventListener("load", (ev) => {
+    fileReader.addEventListener("load", () => {
+      // since there's email pattern validation on the backend I choose not to
+      // do it but here would be the place, but it would introduce a number of
+      // UI/UX issues, I'm not sure how to handle.
       resolve({
         fileName: file.name,
-        emails: fileReader.result.split("\n").filter(Boolean)
+        emails: fileReader.result.split("\n").filter(Boolean),
       });
     });
 
@@ -21,28 +24,69 @@ function parseEmailFile(file) {
   });
 }
 
+function submitJson(resource, body) {
+  return fetch(`${API_URL}/${resource}`, {
+    method: "POST",
+    body: JSON.stringify(body),
+    headers: {
+      "Content-type": "application/json",
+    },
+  });
+}
+
+function prettyErrorMessages(errKey) {
+  return (
+    {
+      send_failure: "Failed to send to some addresses",
+      server_error: "Unexpected server error",
+      invalid_request_body: "Better luck next time",
+    }[errKey] ?? errKey
+  );
+}
+
 const InputForm = forwardRef((props, formRef) => {
-  const { onChange, files = [] } = props;
+  const { onChange, onSubmit, files = [], statusMessage, borkedEmails } = props;
 
   const handleFileChange = (e) => {
     onChange(Array.from(e.currentTarget.files));
   };
 
+  const handleFormSubmit = (e) => {
+    e.preventDefault();
+
+    onSubmit();
+  };
+
   return (
-    <form ref={formRef}>
-      <input
-        type="file"
-        accept=".txt,text/plain"
-        multiple
-        onChange={handleFileChange}
-      />
+    <form ref={formRef} onSubmit={handleFormSubmit} className="email-form">
+      <div className="email-form__form-body">
+        <input
+          type="file"
+          accept=".txt,text/plain"
+          multiple
+          onChange={handleFileChange}
+        />
 
-      <ul>
-        {files.map((file) => (
-          <li key={file?.fileName}>{file.fileName} ({file.emails?.length ?? 0})</li>
-        ))}
-      </ul>
+        <ul>
+          {files.map((file) => (
+            <li key={file?.fileName}>
+              {file.fileName} ({file.emails?.length ?? 0})
+            </li>
+          ))}
+        </ul>
 
+        <button type="submit">Send emails</button>
+      </div>
+
+      <div className="email-form__status-message">
+        {statusMessage}
+
+        <ul>
+          {borkedEmails?.map((email) => (
+            <li key={email}>{email}</li>
+          ))}
+        </ul>
+      </div>
     </form>
   );
 });
@@ -53,57 +97,64 @@ function App() {
   const [statusMessage, setStatusMessage] = useState("");
   const [borkedEmails, setBorkedEmails] = useState([]);
 
-  const handleSubmitBtnClick = (e) => {
-    e.preventDefault();
+  const resetState = () => {
+    setStatusMessage("");
+    setBorkedEmails([]);
+    setFiles([]);
+  };
 
-    (async () => {
-      const emails = Array.from(new Set(files.flatMap(file => file.emails)));
+  const handleFormSubmit = async () => {
+    if (files.length === 0) {
+      resetState();
+      setStatusMessage("You shouldn't send an empty list. Should you?");
+      return;
+    }
 
-      setStatusMessage("Loading...");
-      const response = await fetch(`${API_URL}/send`, {
-        method: "POST",
-        body: JSON.stringify({ emails }),
-        headers: {
-          'Content-type': 'application/json'
-        }
-      });
+    setStatusMessage("Loading...");
+
+    const emails = Array.from(new Set(files.flatMap((file) => file.emails)));
+    try {
+      const response = await submitJson("send", { emails });
 
       formRef.current.reset();
       setFiles([]);
 
       if (response.status === 200) {
-        setStatusMessage("Emails sent successfully!")
-        return 
+        setStatusMessage("Emails sent successfully!");
+        return;
       }
 
       const json = await response.json();
-      setStatusMessage(`There was an erorr: ${json.error}`)
+      setStatusMessage(
+        `There was an error: ${prettyErrorMessages(json.error)}`
+      );
       setBorkedEmails(json.emails);
-    })();
+    } catch (e) {
+      setStatusMessage(
+        "There was an unexpected error. Either you, or the API is offline"
+      );
+    }
   };
 
-  const handleInputChange = async files => {
-    setStatusMessage("");
-    setBorkedEmails([]);
-    setFiles(await Promise.all(files.map(parseEmailFile)));
-  }
+  const handleInputChange = async (files) => {
+    resetState();
+
+    try {
+      setFiles(await Promise.all(files.map(parseEmailFile)));
+    } catch (err) {
+      setStatusMessage(err.message);
+    }
+  };
 
   return (
-    <>
-      <InputForm
-        ref={formRef}
-        files={files}
-        onChange={handleInputChange}
-      />
-      <button onClick={handleSubmitBtnClick}>Send emails</button>
-
-      <div>
-        {statusMessage}
-      </div>
-      <ul>
-        {borkedEmails?.map(email => <li key={email}>{email}</li>)}
-      </ul>
-    </>
+    <InputForm
+      ref={formRef}
+      files={files}
+      onChange={handleInputChange}
+      onSubmit={handleFormSubmit}
+      statusMessage={statusMessage}
+      borkedEmails={borkedEmails}
+    />
   );
 }
 
