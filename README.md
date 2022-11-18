@@ -16,9 +16,9 @@ Create a new repository on GitHub. You can [use this one as a template](https://
 
 Your solution should meet all these requirements.
 
-- [ ] Allow the user to select multiple `.txt` files with email addresses in them
-- [ ] List all selected files together with their filenames
-- [ ] When the form is submitted, read all selected files and parse the email addresses
+- [x] Allow the user to select multiple `.txt` files with email addresses in them
+- [x] List all selected files together with their filenames
+- [x] When the form is submitted, read all selected files and parse the email addresses
 - [ ] Send the list of email addresses to the provided API endpoint
 - [ ] If the emails were sent successfully, reset the form and show a success message
 - [ ] If the sending fails, show an error message and all email addresses which failed
