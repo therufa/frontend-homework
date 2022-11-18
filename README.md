@@ -19,17 +19,17 @@ Your solution should meet all these requirements.
 - [x] Allow the user to select multiple `.txt` files with email addresses in them
 - [x] List all selected files together with their filenames
 - [x] When the form is submitted, read all selected files and parse the email addresses
-- [ ] Send the list of email addresses to the provided API endpoint
-- [ ] If the emails were sent successfully, reset the form and show a success message
-- [ ] If the sending fails, show an error message and all email addresses which failed
+- [x] Send the list of email addresses to the provided API endpoint
+- [x] If the emails were sent successfully, reset the form and show a success message
+- [x] If the sending fails, show an error message and all email addresses which failed
 
 ## Bonus requirements
 
 These requirements are not required, but feel free to complete some of them if they seem interesting, or to come up with your own :)
 
-- [ ] Show a loading state while the request is in progress
+- [x] Show a loading state while the request is in progress
 - [ ] Allow drag & dropping files
-- [ ] Show the number of email addresses in each selected file before the form is sent
+- [x] Show the number of email addresses in each selected file before the form is sent
 
 ## Screenshots from a basic solution
 

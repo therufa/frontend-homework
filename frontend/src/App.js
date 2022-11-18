@@ -1,8 +1,8 @@
-import React, { useRef, useState } from "react";
+import React, { forwardRef, useRef, useState } from "react";
 
 const API_URL = "https://toggl-hire-frontend-homework.onrender.com/api";
 
-function readFileText(file) {
+function parseEmailFile(file) {
   return new Promise((resolve, reject) => {
     const fileReader = new FileReader();
 
@@ -11,41 +11,41 @@ function readFileText(file) {
     }
 
     fileReader.addEventListener("load", (ev) => {
-      resolve(fileReader.result);
+      resolve({
+        fileName: file.name,
+        emails: fileReader.result.split("\n").filter(Boolean)
+      });
     });
 
     fileReader.readAsText(file);
   });
 }
 
-function parseEmailList(fileContentList) {
-  const emailList = fileContentList
-    .reduce(
-      (emails, rawList) => [...emails, rawList.split("\n").filter(Boolean)],
-      []
-    )
-    .flat();
+const InputForm = forwardRef((props, formRef) => {
+  const { onChange, files = [] } = props;
 
-  // Convert it to set in order to de-duplicate contents
-  const emailSet = new Set(emailList);
-
-  return Array.from(emailSet);
-}
-
-function InputForm({ onChange }) {
   const handleFileChange = (e) => {
     onChange(Array.from(e.currentTarget.files));
   };
 
   return (
-    <input
-      type="file"
-      accept=".txt,text/plain"
-      multiple
-      onChange={handleFileChange}
-    />
+    <form ref={formRef}>
+      <input
+        type="file"
+        accept=".txt,text/plain"
+        multiple
+        onChange={handleFileChange}
+      />
+
+      <ul>
+        {files.map((file) => (
+          <li key={file?.fileName}>{file.fileName} ({file.emails?.length ?? 0})</li>
+        ))}
+      </ul>
+
+    </form>
   );
-}
+});
 
 function App() {
   const formRef = useRef(0);
@@ -57,9 +57,9 @@ function App() {
     e.preventDefault();
 
     (async () => {
-      const fileContentList = await Promise.all(files.map(readFileText));
-      const emails = parseEmailList(fileContentList);
+      const emails = Array.from(new Set(files.flatMap(file => file.emails)));
 
+      setStatusMessage("Loading...");
       const response = await fetch(`${API_URL}/send`, {
         method: "POST",
         body: JSON.stringify({ emails }),
@@ -70,7 +70,6 @@ function App() {
 
       formRef.current.reset();
       setFiles([]);
-      setStatusMessage("Loading...");
 
       if (response.status === 200) {
         setStatusMessage("Emails sent successfully!")
@@ -83,21 +82,19 @@ function App() {
     })();
   };
 
-  const handleInputChange = files => {
+  const handleInputChange = async files => {
     setStatusMessage("");
     setBorkedEmails([]);
-    setFiles(files);
+    setFiles(await Promise.all(files.map(parseEmailFile)));
   }
 
   return (
-    <form ref={formRef}>
-      <InputForm onChange={handleInputChange} />
-      <ul>
-        {files.map((file) => (
-          <li key={file.name}>{file.name}</li>
-        ))}
-      </ul>
-
+    <>
+      <InputForm
+        ref={formRef}
+        files={files}
+        onChange={handleInputChange}
+      />
       <button onClick={handleSubmitBtnClick}>Send emails</button>
 
       <div>
@@ -106,7 +103,7 @@ function App() {
       <ul>
         {borkedEmails?.map(email => <li key={email}>{email}</li>)}
       </ul>
-    </form>
+    </>
   );
 }
 
