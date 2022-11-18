@@ -44,6 +44,20 @@ function prettyErrorMessages(errKey) {
   );
 }
 
+function fileArrayFromDataTransfer(dataTransfer) {
+  if (dataTransfer.items) {
+    return Array.from(dataTransfer.items).reduce((files, item) => {
+      if (item.kind === 'file') {
+        return [...files, item.getAsFile()];
+      }
+
+      return files;
+    }, []);
+  }
+
+  return Array.from(dataTransfer.files);
+}
+
 const InputForm = forwardRef((props, formRef) => {
   const { onChange, onSubmit, files = [], statusMessage, borkedEmails } = props;
 
@@ -57,8 +71,20 @@ const InputForm = forwardRef((props, formRef) => {
     onSubmit();
   };
 
+  const handleFileDrop = (e) => {
+    e.preventDefault();
+
+    const files = fileArrayFromDataTransfer(e.dataTransfer);
+    onChange(files);
+  };
+
+  const handleFileDrag = (e) => {
+    // prevent default browser behaviour
+    e.preventDefault();
+  };
+
   return (
-    <form ref={formRef} onSubmit={handleFormSubmit} className="email-form">
+    <form ref={formRef} onSubmit={handleFormSubmit} onDrop={handleFileDrop} onDragOver={handleFileDrag} className="email-form">
       <div className="email-form__form-body">
         <input
           type="file"

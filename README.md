@@ -28,7 +28,7 @@ Your solution should meet all these requirements.
 These requirements are not required, but feel free to complete some of them if they seem interesting, or to come up with your own :)
 
 - [x] Show a loading state while the request is in progress
-- [ ] Allow drag & dropping files
+- [x] Allow drag & dropping files
 - [x] Show the number of email addresses in each selected file before the form is sent
 
 ## Screenshots from a basic solution
