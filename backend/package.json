@@ -6,7 +6,7 @@
   "dependencies": {
     "@fastify/cors": "^8.0.0",
     "@fastify/static": "^6.4.0",
-    "fastify": "^4.2.0",
+    "fastify": "^4.10.2",
     "then-sleep": "^1.0.1"
   },
   "scripts": {
